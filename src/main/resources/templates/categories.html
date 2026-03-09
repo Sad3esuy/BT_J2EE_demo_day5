@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh mục - Product Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f9fafb;
+            --sidebar-bg: #111827;
+            --sidebar-color: #9ca3af;
+            --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: #111827; margin: 0; padding: 0; }
+        .wrapper { display: flex; align-items: stretch; min-height: 100vh; }
+
+        /* Sidebar */
+        #sidebar { min-width: 260px; max-width: 260px; background: var(--sidebar-bg); color: #fff; transition: all 0.3s; z-index: 999; display: flex; flex-direction: column; }
+        #sidebar .sidebar-header { padding: 25px 20px; background: #1f2937; }
+        #sidebar .sidebar-header h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0; color: #fff; }
+        #sidebar ul.components { padding: 20px 0; flex-grow: 1; }
+        #sidebar ul li a { padding: 12px 25px; font-size: 0.95rem; display: block; color: var(--sidebar-color); text-decoration: none; transition: 0.2s; font-weight: 500; }
+        #sidebar ul li a:hover, #sidebar ul li.active > a { color: #fff; background: #374151; }
+        #sidebar ul li a i { margin-right: 12px; width: 20px; text-align: center; }
+
+        /* Content */
+        #content { width: 100%; padding: 30px; transition: all 0.3s; }
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 1.75rem; font-weight: 700; }
+        .card-ui { background: #fff; border: none; border-radius: 12px; box-shadow: var(--card-shadow); }
+        .table thead th { background: #f9fafb; color: #4b5563; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; padding: 12px 24px; border: none; }
+        .table tbody td { padding: 16px 24px; border-bottom: 1px solid #f3f4f6; }
+
+        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .x-small { font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-boxes-stacked me-2"></i>IMS Pro</h3>
+        </div>
+        <ul class="list-unstyled components mb-auto">
+            <li><a href="/"><i class="fas fa-chart-pie"></i> Tổng quan</a></li>
+            <li><a href="/products"><i class="fas fa-shopping-bag"></i> Sản phẩm</a></li>
+            <li class="active"><a href="/categories"><i class="fas fa-tags"></i> Danh mục</a></li>
+        </ul>
+        <div class="p-4 mt-auto">
+            <div class="card bg-dark border-secondary p-3">
+                <div class="d-flex align-items-center">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff" class="rounded-circle me-2" width="32">
+                    <div class="text-truncate">
+                        <p class="mb-0 small fw-bold text-white text-nowrap">Quản trị viên</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="content">
+        <div class="page-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="page-title">Quản lý Danh mục</h1>
+                <p class="text-secondary small">Tổ chức phân loại cho các sản phẩm của bạn.</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card card-ui p-4">
+                    <h5 class="fw-bold mb-4" id="categoryTitle">Thêm Danh mục mới</h5>
+                    <form id="categoryForm">
+                        <input type="hidden" id="categoryId">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Tên danh mục</label>
+                            <input type="text" class="form-control" id="categoryName" placeholder="VD: Điện tử, Thời trang..." required>
+                        </div>
+                        <button type="button" class="btn btn-primary w-100" onclick="saveCategory()">
+                            <i class="fas fa-save me-2"></i>Lưu thông tin
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm w-100 mt-2 text-decoration-none" onclick="clearForm()">Làm mới</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card card-ui overflow-hidden">
+                    <div class="card-header bg-white py-3 border-0">
+                        <h5 class="fw-bold mb-0">Danh sách Categories</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên Danh mục</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const apiPrefix = '/api/v1';
+    document.addEventListener('DOMContentLoaded', loadCategories);
+
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${apiPrefix}/categories`);
+            const data = await res.json();
+            const body = document.getElementById('categoryBody');
+            body.innerHTML = '';
+            data.forEach((c, i) => {
+                body.innerHTML += `
+                    <tr>
+                        <td class="text-secondary small">${i + 1}</td>
+                        <td class="fw-bold">${c.categoryName}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-2" onclick="editCategory('${c.categoryId}', '${c.categoryName}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('${c.categoryId}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (e) {}
+    }
+
+    async function saveCategory() {
+        const id = document.getElementById('categoryId').value;
+        const name = document.getElementById('categoryName').value;
+        const input = document.getElementById('categoryName');
+        input.classList.remove('is-invalid');
+
+        try {
+            const url = id ? `${apiPrefix}/categories/${id}` : `${apiPrefix}/categories`;
+            const method = id ? 'PUT' : 'POST';
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoryName: name })
+            });
+
+            if(res.ok) {
+                Swal.fire('Thành công', 'Dữ liệu đã được lưu.', 'success');
+                clearForm();
+                loadCategories();
+            } else if (res.status === 400) {
+                const errors = await res.json();
+                input.classList.add('is-invalid');
+                Swal.fire('Lỗi', errors.categoryName || 'Dữ liệu không hợp lệ', 'error');
+            }
+        } catch (e) {}
+    }
+
+    function editCategory(id, name) {
+        document.getElementById('categoryId').value = id;
+        document.getElementById('categoryName').value = name;
+        document.getElementById('categoryTitle').innerText = 'Chỉnh sửa Danh mục';
+    }
+
+    function clearForm() {
+        document.getElementById('categoryId').value = '';
+        document.getElementById('categoryName').value = '';
+        document.getElementById('categoryTitle').innerText = 'Thêm Danh mục mới';
+    }
+
+    function deleteCategory(id) {
+        Swal.fire({
+            title: 'Chắc chắn xóa?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await fetch(`${apiPrefix}/categories/${id}`, { method: 'DELETE' });
+                loadCategories();
+            }
+        });
+    }
+</script>
+</body>
+</html>
