@@ -1,0 +1,46 @@
+services:
+  db-postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: demo1234
+      POSTGRES_DB: ql_san_pham_demo
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app-java:
+    build: .
+    image: sadmesuyy/qlsp-be:v1
+    container_name: qlsp-be
+    ports:
+      - "8080:8080"
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+
+    environment:
+      # Cấu hình kết nối PostgreSQL cho Spring Boot
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db-postgres:5432/ql_san_pham_demo
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: demo1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      api.prefix: /api/v1
+
+  frontend:
+    build: ./frontend
+    image: sadmesuyy/qlsp-fe:v1
+    container_name: qlsp-fe
+    ports:
+      - "3000:80"
+    depends_on:
+      - app-java
+
+volumes:
+  pg_data:

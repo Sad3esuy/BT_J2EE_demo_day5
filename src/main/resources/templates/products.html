@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,12 +59,18 @@
         </ul>
         <div class="p-4 mt-auto">
             <div class="card bg-dark border-secondary p-3">
-                <div class="d-flex align-items-center">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff" class="rounded-circle me-2" width="32">
+                <div class="d-flex align-items-center mb-3">
+                    <img th:src="'https://ui-avatars.com/api/?name=' + ${#authentication.name} + '&background=4f46e5&color=fff'" class="rounded-circle me-2" width="32">
                     <div class="text-truncate">
-                        <p class="mb-0 small fw-bold text-nowrap text-white">Quản trị viên</p>
+                        <p class="mb-0 small fw-bold text-nowrap text-white" th:text="${#authentication.name}">Username</p>
+                        <p class="mb-0 x-small text-secondary" style="font-size: 0.70rem;" th:text="${#authentication.authorities}">Roles</p>
                     </div>
                 </div>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="fas fa-sign-out-alt me-1"></i> Đăng xuất
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
@@ -76,7 +82,7 @@
                 <h1 class="page-title">Quản lý Sản phẩm</h1>
                 <p class="text-secondary small">Thêm, sửa, xóa và quản lý tồn kho sản phẩm.</p>
             </div>
-            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#productModal" onclick="clearProductForm()">
+            <button sec:authorize="hasRole('ADMIN')" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#productModal" onclick="clearProductForm()">
                 <i class="fas fa-plus-circle me-2"></i> Thêm sản phẩm
             </button>
         </div>
@@ -161,9 +167,12 @@
 <script>
     const apiPrefix = '/api/v1';
     let productModal;
+    const isAdmin = [[${#authorization.expression('hasRole(''ADMIN'')')}]];
 
     document.addEventListener('DOMContentLoaded', () => {
-        productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        if (document.getElementById('productModal')) {
+            productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        }
         loadProducts();
         loadCategoryOptions();
     });
@@ -175,6 +184,16 @@
             const body = document.getElementById('productBody');
             body.innerHTML = '';
             products.forEach((p, i) => {
+                let actions = '';
+                if (isAdmin) {
+                    actions = `
+                        <button class="btn btn-sm btn-outline-primary me-2" onclick="editProduct('${p.productId}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${p.productId}')"><i class="fas fa-trash"></i></button>
+                    `;
+                } else {
+                    actions = `<span class="badge bg-light text-muted border small">Chỉ xem</span>`;
+                }
+
                 body.innerHTML += `
                     <tr>
                         <td class="text-secondary small">${i + 1}</td>
@@ -185,8 +204,7 @@
                         <td class="text-center fw-bold">${p.stockQuantity}</td>
                         <td class="text-center">${p.isActive ? '<span class="badge bg-success">Đang bán</span>' : '<span class="badge bg-danger">Ngừng bán</span>'}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-2" onclick="editProduct('${p.productId}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct('${p.productId}')"><i class="fas fa-trash"></i></button>
+                            ${actions}
                         </td>
                     </tr>
                 `;
